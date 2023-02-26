@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 use App\Models\Post;
+use App\Http\Requests\Post\StorePostRequest;
+use App\Http\Requests\Post\UpdatePostRequest;
 
 class PostController extends BaseController
 {
@@ -15,23 +16,33 @@ class PostController extends BaseController
         return $this->getData(Post::all());
     }
 
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        if(count($request->all()) <= 0) return $this->validatorFails('Không có dữ liệu!');
-        $storeRequest = $request->only(['name', 'preview', 'body', 'category_id']);
-        $storeRequest['slug'] = Str::slug($storeRequest['name']);
-        $storeRequest['user_id'] = 1;
-        $validator = Validator::make($storeRequest, [
-            'name' => 'required|string|min:20|max:200|unique:posts,name',
-            'preview' => 'required|'. $this->validateImageOrString($storeRequest['preview']),
-            'body' => 'required|string|min:50',
-            'category_id' => 'required|numeric',
-        ]);
-        if ($validator->fails()) return $this->validatorFails($validator->messages());
-        if(file_exists($validator->valid()['preview'])) {
+        $post = $request->validated();
+        $post['slug'] = Str::slug($post['name']);
+        $post['user_id'] = 1;
+        //Check if youtube_embed_code isset then choose this
+        if(isset($post['youtube_embed_code'])) {
+            $post['preview'] = $post['youtube_embed_code'];
+            $post = Arr::except($post, ['youtube_embed_code']);
         }
-        // Post::create($validator->valid());
-        // return $this->postSuccess($validator->valid());
+        //Or else choose this
+        else if ($post['preview']) {
+            array_unshift($post['preview'],'');
+            unset($post['preview'][0]);
+            $count = count($post['preview']);
+            $preview = '';
+            //Lưu array files vào Cloudinary
+            for ($i = 1; $i<=$count; $i++) {
+                $result = $post['preview'][$i]->storeOnCloudinaryAs('posts/'.$post['slug'], $i);
+                // $path = str_replace("https://res.cloudinary.com/saymetruyen/image/upload/", "", $result->getSecurePath());
+                // $preview .= $path . ",";
+                $preview .= $result->getFileName() . "." . $result->getExtension() . ",";
+            }
+            $post['preview'] = trim($preview, ",");
+        }
+        Post::create($post);
+        return $this->postSuccess($post);
     }
 
     public function show($slug)
@@ -39,24 +50,20 @@ class PostController extends BaseController
         return $this->getData(Post::with('category:name')->where('slug', $slug)->first());
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePostRequest $request, $id)
     {
-        if(count($request->all()) <= 0) return $this->validatorFails('Không có dữ liệu!');
-
-        $updateRequest = $request->only(['name', 'preview', 'body', 'category_id']);
-        $updateRequest['slug'] = Str::slug($updateRequest['name']);
-        $updateRequest['user_id'] = 1;
-
-        $validator = Validator::make([
-            'name' => 'required|min:20|max:200|unique:posts,name,'.$id,
-            'preview' => 'required|'.$this->validateImageOrString($request->hasFile('preview')),
-            'body' => 'required|min:100',
-            'category_id' => 'required',
-        ]);
-
-        if ($validator->fails()) return $this->validatorFails($validator->messages());
-        Post::where('id', $id)->update($validator->valid());
-        return $this->postSuccess($validator->valid(), 'Chỉnh sửa thành công!');
+        $updatePost = $request->validated();
+        $updatePost['slug'] = Str::slug($updatePost['name']);
+        $updatePost['user_id'] = 1;
+        if(isset($updatePost['youtube_embed_code'])) {
+            $updatePost['preview'] = $updatePost['youtube_embed_code'];
+            $updatePost = Arr::except($updatePost, ['youtube_embed_code']);
+        } else if ($updatePost['preview']) {
+            foreach($updatePost['preview'] as $key => $value)
+            dd($value);
+        }
+        Post::where('id', $id)->update($updatePost);
+        return $this->postSuccess($updatePost, 'Chỉnh sửa thành công!');
     }
 
     public function delete($id)

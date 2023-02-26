@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('slug', 200);
             $table->string('preview', 1000);
             $table->text('body');
-            $table->foreignId('category_id')->constrained('categories')->onUpdate('cascade')->onDelete('no action');
+            $table->foreignId('category_id')->nullable()->constrained('categories')->onUpdate('cascade')->onDelete('set null');
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('no action');
             $table->integer('view')->default(0);
             $table->timestamps();

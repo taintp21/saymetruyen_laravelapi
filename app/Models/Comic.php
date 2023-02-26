@@ -27,7 +27,7 @@ class Comic extends Model
 
     public function chapters()
     {
-        return $this->hasOne(Chapter::class, 'comic_id', 'id');
+        return $this->hasMany(Chapter::class, 'comic_id', 'id');
     }
 
     public function setNameAttribute($input)

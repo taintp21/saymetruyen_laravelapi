@@ -6,38 +6,39 @@ use App\Http\Controllers\Controller;
 
 class BaseController extends Controller
 {
-    public function postSuccess($data, $message = 'Thêm mới thành công!', $code = 200)
+    public function postSuccess($data, $message = 'Thêm mới thành công!', $code = 201)
     {
         if($data == null)
         {
             return response()->json([
+                'code' => $code,
                 'message' => $message
             ], $code);
         }
         else
         {
             return response()->json([
+                'code' => $code,
+                'message' => $message,
                 'data' => $data,
-                'message' => $message
             ], $code);
         }
     }
 
-    public function validatorFails($errors, $code = 400)
+    public function validatorFails($errors, $code = 422)
     {
         return response()->json([
+            'code' => $code,
             'errors' => $errors
         ], $code);
     }
 
     public function getData($data, $code = 200)
     {
-        return response()->json($data, $code);
-    }
-
-    public function validateImageOrString($hasFile = false)
-    {
-        if(file_exists($hasFile)) return 'image|mimes:jpg,jpeg,png|mimetypes:image/jpeg,image/png';
-        else return 'string';
+        if(count($data) === 0) return response()->json(["message" => "Không có dữ liệu!"]);
+        return response()->json([
+            'code' => $code,
+            'data' => $data
+        ], $code);
     }
 }
