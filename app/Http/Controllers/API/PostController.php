@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Post;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Cloudinary\Api\Admin\AdminApi;
 
+use App\Models\Post;
 use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
-use Cloudinary\Cloudinary;
-use Cloudinary\Api\Admin\AdminApi;
 
 class PostController extends BaseController
 {
@@ -88,7 +87,7 @@ class PostController extends BaseController
     public function delete($slug)
     {
         Post::where('slug', $slug)->delete();
-        return $this->postSuccess(null, 'Xoá thành công!');
+        return $this->postSuccess(null, 'Đã chuyển vào thùng rác!');
     }
 
     public function destroy($slug)

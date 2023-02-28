@@ -4,9 +4,10 @@ namespace App\Http\Controllers\API;
 
 use Illuminate\Support\Str;
 
-use App\Models\Comic;
 use App\Http\Requests\Comic\StoreComicRequest;
 use App\Http\Requests\Comic\UpdateComicRequest;
+use App\Models\Comic;
+use ImageKit\ImageKit;
 
 class ComicController extends BaseController
 {
@@ -20,6 +21,21 @@ class ComicController extends BaseController
         $comic = $request->validated();
         $comic['slug'] = Str::slug($comic['name']);
         $comic['user_id'] = 1;
+
+        $imageKit = new ImageKit(config("imagekit.public_key"), config("imagekit.private_key"), config("imagekit.url_endpoint"));
+        $uploadBgPreview = $imageKit->uploadFile([
+            'file' => base64_encode(file_get_contents($comic['background_preview']->path())),
+            'fileName' => $comic['slug'] . "_bg",
+            'useUniqueFileName' => false
+        ]);
+        $uploadImgPreview = $imageKit->uploadFile([
+            'file' => base64_encode(file_get_contents($comic['image_preview']->path())),
+            'fileName' => $comic['slug'] . "_img",
+            'useUniqueFileName' => false
+        ]);
+
+        $comic['background_preview'] = $uploadBgPreview->result->name;
+        $comic['image_preview'] = $uploadImgPreview->result->name;
         $storeComic = Comic::create($comic);
         $storeComic->categories()->attach(explode(',', $comic['category_id']));
         return $this->postSuccess($storeComic);
@@ -35,10 +51,37 @@ class ComicController extends BaseController
         $comic = $request->validated();
         $comic['slug'] = Str::slug($comic['name']);
         $comic['user_id'] = 1;
-        $currentComic = Comic::find($slug);
-        $currentComic->update($comic);
-        $currentComic->categories()->sync(explode(',', $comic['category_id']));
-        return $this->postSuccess($currentComic, 'Chỉnh sửa thành công!');
+
+        $imageKit = new ImageKit(config("imagekit.public_key"), config("imagekit.private_key"), config("imagekit.url_endpoint"));
+        if ($comic['slug'] != $slug) {
+            $imageKit->rename([
+                "filePath" => $slug . "_bg",
+                "newFileName" => $comic['slug'] . "_bg",
+                "purgeCache" => false
+            ]);
+            $imageKit->rename([
+                "filePath" => $slug . "_img",
+                "newFileName" => $comic['slug'] . "_img",
+                "purgeCache" => false
+            ]);
+        }
+        $uploadBgPreview = $imageKit->uploadFile([
+            'file' => base64_encode(file_get_contents($comic['background_preview']->path())),
+            'fileName' => $comic['slug'] . "_bg",
+            'useUniqueFileName' => false
+        ]);
+        $uploadImgPreview = $imageKit->uploadFile([
+            'file' => base64_encode(file_get_contents($comic['image_preview']->path())),
+            'fileName' => $comic['slug'] . "_img",
+            'useUniqueFileName' => false
+        ]);
+
+        $comic['background_preview'] = $uploadBgPreview->result->name;
+        $comic['image_preview'] = $uploadImgPreview->result->name;
+
+        Comic::where('slug', $slug)->update($comic);
+        Comic::find($slug)->categories()->sync(explode(',', $comic['category_id']));
+        return $this->postSuccess($comic, 'Chỉnh sửa thành công!');
     }
 
     public function delete($slug)
@@ -52,6 +95,14 @@ class ComicController extends BaseController
         $comic = Comic::where('slug', $slug);
         if ($comic->exists())
         {
+            $imageKit = new ImageKit(config("imagekit.public_key"), config("imagekit.private_key"), config("imagekit.url_endpoint"));
+            $searchBg = $imageKit->listFiles([
+                'searchQuery' => $slug . "_bg"
+            ]);
+            $searchImg = $imageKit->listFiles([
+                'searchQuery' => $slug . "_img"
+            ]);
+            $imageKit->bulkDeleteFiles([$searchBg->result->fileId, $searchImg->result->fileId]);
             $comic->forceDelete();
             return $this->postSuccess(false, 'Xoá thành công!');
         }

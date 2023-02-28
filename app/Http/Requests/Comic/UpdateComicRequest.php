@@ -29,6 +29,10 @@ class UpdateComicRequest extends FormRequest
                 'max:200',
                 'unique:comics,slug,'.$this->route('truyen_tranh')
             ],
+            'another_names' => [
+                'nullable',
+                'max:300'
+            ],
             'author' => [
                 'required',
                 'max:50'
@@ -38,11 +42,13 @@ class UpdateComicRequest extends FormRequest
             ],
             'background_preview' => [
                 'required',
-                'max:500'
+                'image',
+                'mimetypes:image/jpeg,image/png'
             ],
             'image_preview' => [
                 'required',
-                'max:500'
+                'image',
+                'mimetypes:image/jpeg,image/png'
             ],
             'user_id' => [
                 'required'

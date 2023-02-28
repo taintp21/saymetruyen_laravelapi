@@ -30,6 +30,10 @@ class StoreComicRequest extends FormRequest
                 'max:200',
                 'unique:comics,slug'
             ],
+            'another_names' => [
+                'nullable',
+                'max:300'
+            ],
             'author' => [
                 'required',
                 'string',
@@ -40,11 +44,13 @@ class StoreComicRequest extends FormRequest
             ],
             'background_preview' => [
                 'required',
-                'max:500'
+                'image',
+                'mimetypes:image/jpeg,image/png'
             ],
             'image_preview' => [
                 'required',
-                'max:500'
+                'image',
+                'mimetypes:image/jpeg,image/png'
             ],
             'category_id' => [
                 'required',

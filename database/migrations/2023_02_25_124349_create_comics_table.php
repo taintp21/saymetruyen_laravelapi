@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('slug', 200);
             $table->string('author', 50);
             $table->text('desc')->nullable();
-            $table->string('background_preview', 255);
-            $table->string('image_preview', 255);
+            $table->string('background_preview', 50);
+            $table->string('image_preview', 50);
             $table->tinyInteger('status');
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('no action');
             $table->timestamps();
