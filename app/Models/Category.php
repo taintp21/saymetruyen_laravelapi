@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Cviebrock\EloquentSluggable\Sluggable;
 
 class Category extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Sluggable;
     protected $table = 'categories';
     protected $fillable = [
         'name',
@@ -17,6 +18,7 @@ class Category extends Model
         'type',
         'user_id'
     ];
+
     public function comics()
     {
         return $this->belongsToMany(Comic::class, 'category_comic', 'category_id', 'comic_id');
@@ -35,5 +37,19 @@ class Category extends Model
     public function setDescAttribute($input)
     {
         return $this->attributes['desc'] = mb_strtoupper(mb_substr($input, 0, 1)) . mb_substr($input, 1); //ucfirst with UTF-8
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'name'
+            ]
+        ];
     }
 }

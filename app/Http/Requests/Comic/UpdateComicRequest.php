@@ -27,7 +27,7 @@ class UpdateComicRequest extends FormRequest
             'name' => [
                 'required',
                 'max:200',
-                'unique:comics,name,'.$this->route('truyen_tranh')
+                'unique:comics,slug,'.$this->route('truyen_tranh')
             ],
             'author' => [
                 'required',

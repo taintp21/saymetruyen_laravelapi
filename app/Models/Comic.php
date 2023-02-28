@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Cviebrock\EloquentSluggable\Sluggable;
 
 class Comic extends Model
 {
-    use HasFactory;
+    use HasFactory, Sluggable;
     protected $table = 'comics';
     protected $fillable = [
         'name',
@@ -38,5 +39,19 @@ class Comic extends Model
     public function setAuthorAttribute($input)
     {
         return $this->attributes['author'] = mb_convert_case($input, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'name'
+            ]
+        ];
     }
 }

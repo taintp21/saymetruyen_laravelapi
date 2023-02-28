@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Post;
 
 use App\Http\Requests\BaseRequest;
-use Illuminate\Validation\Rule;
 
 class UpdatePostRequest extends BaseRequest
 {
@@ -31,7 +30,7 @@ class UpdatePostRequest extends BaseRequest
                     'string',
                     'min:20',
                     'max:200',
-                    'unique:posts,name,' . $this->route('tin_tuc'),
+                    'unique:posts,slug,' . $this->route('tin_tuc'),
                 ],
                 'preview' => [
                     'required_without:youtube_embed_code', // Nếu youtube_embed_code field empty thì field này phải có value.

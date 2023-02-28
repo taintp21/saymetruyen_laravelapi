@@ -28,7 +28,7 @@ class StoreComicRequest extends FormRequest
                 'required',
                 'string',
                 'max:200',
-                'unique:comics,name'
+                'unique:comics,slug'
             ],
             'author' => [
                 'required',

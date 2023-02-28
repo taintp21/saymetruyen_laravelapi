@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use Illuminate\Support\Str;
-
 use App\Models\Category;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
@@ -18,7 +16,6 @@ class CategoryController extends BaseController
     public function store(StoreCategoryRequest $request)
     {
         $category = $request->validated();
-        $category['slug'] = Str::slug($category['name']);
         $category['user_id'] = 1;
         Category::create($category);
         return $this->postSuccess($category);
@@ -29,24 +26,27 @@ class CategoryController extends BaseController
         return $this->getData(Category::with('comics:name,slug,image_preview')->where('slug', $slug)->first());
     }
 
-    public function update(UpdateCategoryRequest $request, $id)
+    public function update(UpdateCategoryRequest $request, $slug)
     {
-        $updateCategory = $request->validated();
-        $updateCategory['slug'] = Str::slug($updateCategory['name']);
-        $updateCategory['user_id'] = 1;
-        Category::where('id', $id)->update($updateCategory);
-        return $this->postSuccess($updateCategory, 'Chỉnh sửa thành công!');
+        $category = $request->validated();
+        $category['user_id'] = 1;
+        Category::where('slug', $slug)->update($category);
+        return $this->postSuccess($category, 'Chỉnh sửa thành công!');
     }
 
-    public function delete($id)
+    public function delete($slug)
     {
-        Category::where('id', $id)->delete();
-        return $this->postSuccess(null, 'Xoá thành công!');
+        Category::where('slug', $slug)->delete();
+        return $this->postSuccess(false, 'Đã chuyển vào thùng rác!');
     }
 
-    public function destroy($id)
+    public function destroy($slug)
     {
-        Category::where('id', $id)->forceDelete();
-        return $this->postSuccess(null, 'Xoá thành công!');
+        $category = Category::where('slug', $slug);
+        if ($category->exists())
+        {
+            $category->forceDelete();
+            return $this->postSuccess(false, 'Xoá thành công!');
+        }
     }
 }
