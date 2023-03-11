@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
 
-class CategoryController extends BaseController
+class CategoryController extends Controller
 {
     public function index()
     {
-        return $this->getData(Category::all());
+        return response()->json(Category::all());
+    }
+
+    public function trashed()
+    {
+        return response()->json(Category::onlyTrashed()->get());
     }
 
     public function store(StoreCategoryRequest $request)
@@ -18,12 +24,15 @@ class CategoryController extends BaseController
         $category = $request->validated();
         $category['user_id'] = 1;
         Category::create($category);
-        return $this->postSuccess($category);
+        return response()->json([
+            'code' => 201,
+            'message' => 'Thêm mới thành công!'
+        ], 201);
     }
 
     public function show($slug)
     {
-        return $this->getData(Category::with('comics:name,slug,image_preview')->where('slug', $slug)->first());
+        return response()->json(Category::with('comics:name,slug,image_preview')->where('slug', $slug)->first());
     }
 
     public function update(UpdateCategoryRequest $request, $slug)
@@ -31,13 +40,19 @@ class CategoryController extends BaseController
         $category = $request->validated();
         $category['user_id'] = 1;
         Category::where('slug', $slug)->update($category);
-        return $this->postSuccess($category, 'Chỉnh sửa thành công!');
+        return response()->json([
+            'code' => 201,
+            'message' => 'Chỉnh sửa thành công!'
+        ], 201);
     }
 
     public function delete($slug)
     {
         Category::where('slug', $slug)->delete();
-        return $this->postSuccess(false, 'Đã chuyển vào thùng rác!');
+        return response()->json([
+            'code' => 201,
+            'message' => 'Đã chuyển vào thùng rác!'
+        ], 201);
     }
 
     public function destroy($slug)
@@ -46,7 +61,10 @@ class CategoryController extends BaseController
         if ($category->exists())
         {
             $category->forceDelete();
-            return $this->postSuccess(false, 'Xoá thành công!');
+            return response()->json([
+                'code' => 204,
+                'message' => 'Xoá thành công!'
+            ], 204);
         }
     }
 }

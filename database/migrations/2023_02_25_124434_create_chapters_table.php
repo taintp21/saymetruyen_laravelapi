@@ -16,7 +16,8 @@ return new class extends Migration
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('comic_id')->constrained('comics')->onUpdate('cascade')->onDelete('cascade');
-            $table->decimal('chapter_no',5,1);
+            $table->string('name', 100)->nullable();
+            $table->decimal('chapter_no',5,2);
             $table->text('image_paths');
             $table->integer('view')->default(0);
             $table->timestamps();

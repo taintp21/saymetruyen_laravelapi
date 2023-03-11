@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
@@ -19,12 +21,12 @@ class Category extends Model
         'user_id'
     ];
 
-    public function comics()
+    public function comics(): BelongsToMany
     {
         return $this->belongsToMany(Comic::class, 'category_comic', 'category_id', 'comic_id');
     }
 
-    public function posts()
+    public function posts(): HasMany
     {
         return $this->hasMany(Post::class, 'category_id', 'id');
     }

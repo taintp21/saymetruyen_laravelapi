@@ -52,9 +52,14 @@ class StoreComicRequest extends FormRequest
                 'image',
                 'mimetypes:image/jpeg,image/png'
             ],
+            'user_id' => [
+                'required',
+                'exists:users,id'
+            ],
             'category_id' => [
                 'required',
-                'numeric'
+                'numeric',
+                'exists:categories,id'
             ],
         ];
     }

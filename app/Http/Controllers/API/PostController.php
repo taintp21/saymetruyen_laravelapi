@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Cloudinary\Api\Admin\AdminApi;
@@ -10,11 +11,16 @@ use App\Models\Post;
 use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 
-class PostController extends BaseController
+class PostController extends Controller
 {
     public function index()
     {
-        return $this->getData(Post::all());
+        return response()->json(Post::all());
+    }
+
+    public function trashed()
+    {
+        return response()->json(Post::onlyTrashed()->get());
     }
 
     public function store(StorePostRequest $request)
@@ -41,12 +47,15 @@ class PostController extends BaseController
         }
 
         Post::create($post);
-        return $this->postSuccess($post);
+        return response()->json([
+            'code' => 201,
+            'message' => 'Thêm mới thành công!'
+        ], 201);
     }
 
     public function show($slug)
     {
-        return $this->getData(Post::with('category:name')->where('slug', $slug)->first());
+        return response()->json(Post::with('category:id,name')->where('slug', $slug)->first());
     }
 
     public function update(UpdatePostRequest $request, $slug)
@@ -55,7 +64,7 @@ class PostController extends BaseController
         $post['slug'] = Str::slug($post['name']);
         $post['user_id'] = 1;
 
-        $adminApi = new AdminApi();
+        $adminApi = new AdminApi(config("cloudinary.cloud_url"));
         if ($post['slug'] != $slug) {
             $adminApi->deleteAssetsByPrefix($slug);
             $adminApi->deleteFolder($slug);
@@ -81,25 +90,33 @@ class PostController extends BaseController
         }
 
         Post::where('slug', $slug)->update($post);
-        return $this->postSuccess($post, 'Chỉnh sửa thành công!');
+        return response()->json([
+            'code' => 201,
+            'message' => 'Chỉnh sửa thành công!'
+        ], 201);
     }
 
     public function delete($slug)
     {
         Post::where('slug', $slug)->delete();
-        return $this->postSuccess(null, 'Đã chuyển vào thùng rác!');
+        return response()->json([
+            'code' => 201,
+            'message' => 'Đã chuyển vào thùng rác!'
+        ], 201);
     }
 
     public function destroy($slug)
     {
         $post = Post::where('slug', $slug);
-        if ($post->exists())
-        {
-            $adminApi = new AdminApi();
+        if ($post->exists()) {
+            $adminApi = new AdminApi(config("cloudinary.cloud_url"));
             $adminApi->deleteAssetsByPrefix($slug);
             $adminApi->deleteFolder($slug);
             $post->forceDelete();
-            return $this->postSuccess(null, 'Xoá thành công!');
+            return response()->json([
+                'code' => 204,
+                'message' => 'Xoá thành công!'
+            ], 204);
         }
     }
 }

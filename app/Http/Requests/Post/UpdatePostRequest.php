@@ -23,40 +23,43 @@ class UpdatePostRequest extends BaseRequest
      */
     public function rules()
     {
-        {
-            return [
-                'name' => [
-                    'required',
-                    'string',
-                    'min:20',
-                    'max:200',
-                    'unique:posts,slug,' . $this->route('tin_tuc'),
-                ],
-                'preview' => [
-                    'required_without:youtube_embed_code', // Nếu youtube_embed_code field empty thì field này phải có value.
-                    'prohibits:youtube_embed_code', // youtube_embed_code field phải để trống nếu field này có value.
-                    'array',
-                ],
-                'preview.*' => [
-                    'image',
-                    'mimetypes:image/jpeg,image/png'
-                ],
-                'youtube_embed_code' => [
-                    'required_without:preview',
-                    'prohibits:preview',
-                    'string',
-                    'alpha_dash'
-                ],
-                'body' => [
-                    'required',
-                    'string',
-                    'min:50'
-                ],
-                'category_id' => [
-                    'nullable',
-                    'numeric'
-                ]
-            ];
-        }
+        return [
+            'name' => [
+                'required',
+                'string',
+                'min:20',
+                'max:200',
+                'unique:posts,slug,' . $this->route('tin_tuc'),
+            ],
+            'preview' => [
+                'required_without:youtube_embed_code', // Nếu youtube_embed_code field empty thì field này phải có value.
+                'prohibits:youtube_embed_code', // youtube_embed_code field phải để trống nếu field này có value.
+                'array',
+            ],
+            'preview.*' => [
+                'image',
+                'mimetypes:image/jpeg,image/png'
+            ],
+            'youtube_embed_code' => [
+                'required_without:preview',
+                'prohibits:preview',
+                'string',
+                'alpha_dash'
+            ],
+            'body' => [
+                'required',
+                'string',
+                'min:50'
+            ],
+            'category_id' => [
+                'nullable',
+                'numeric',
+                'exists:categories,id'
+            ],
+            // 'user_id' => [
+            //     'required',
+            //     'exists:users,id'
+            // ]
+        ];
     }
 }

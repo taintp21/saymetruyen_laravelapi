@@ -11,12 +11,19 @@ class Chapter extends Model
     protected $table = 'chapters';
     protected $fillable = [
         'comic_id',
+        'name',
         'chapter_no',
+        'image_paths',
         'view'
     ];
 
     public function comic()
     {
         return $this->belongsTo(Comic::class, 'comic_id', 'id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'type_id', 'id');
     }
 }

@@ -53,8 +53,13 @@ class StorePostRequest extends BaseRequest
             ],
             'category_id' => [
                 'nullable',
-                'numeric'
-            ]
+                'numeric',
+                'exists:categories,id'
+            ],
+            // 'user_id' => [
+            //     'required',
+            //     'exists:users,id'
+            // ]
         ];
     }
 }

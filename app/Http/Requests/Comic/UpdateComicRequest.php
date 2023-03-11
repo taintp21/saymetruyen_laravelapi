@@ -26,6 +26,7 @@ class UpdateComicRequest extends FormRequest
         return [
             'name' => [
                 'required',
+                'string',
                 'max:200',
                 'unique:comics,slug,'.$this->route('truyen_tranh')
             ],
@@ -35,6 +36,7 @@ class UpdateComicRequest extends FormRequest
             ],
             'author' => [
                 'required',
+                'string',
                 'max:50'
             ],
             'desc' => [
@@ -51,10 +53,13 @@ class UpdateComicRequest extends FormRequest
                 'mimetypes:image/jpeg,image/png'
             ],
             'user_id' => [
-                'required'
+                'required',
+                'exists:users,id'
             ],
             'category_id' => [
-                'required'
+                'required',
+                'numeric',
+                'exists:categories,id'
             ]
         ];
     }

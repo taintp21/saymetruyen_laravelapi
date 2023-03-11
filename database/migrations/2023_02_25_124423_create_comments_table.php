@@ -15,11 +15,11 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('no action');
-            $table->unsignedBigInteger('type_id');
             $table->enum('type', ['chapter', 'post']);
+            $table->unsignedBigInteger('type_id');
             $table->integer('parent_id')->nullable();
             $table->text('body');
+            $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('no action');
             $table->timestamps();
             $table->softDeletes();
         });

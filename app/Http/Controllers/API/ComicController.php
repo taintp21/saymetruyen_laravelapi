@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Str;
 
-use App\Http\Requests\Comic\StoreComicRequest;
-use App\Http\Requests\Comic\UpdateComicRequest;
 use App\Models\Comic;
 use ImageKit\ImageKit;
+use App\Http\Requests\Comic\StoreComicRequest;
+use App\Http\Requests\Comic\UpdateComicRequest;
 
-class ComicController extends BaseController
+class ComicController extends Controller
 {
     public function index()
     {
-        return $this->getData(Comic::all());
+        return response()->json(Comic::all());
+    }
+
+    public function trashed()
+    {
+        return response()->json(Comic::onlyTrashed()->get());
     }
 
     public function store(StoreComicRequest $request)
@@ -38,12 +44,15 @@ class ComicController extends BaseController
         $comic['image_preview'] = $uploadImgPreview->result->name;
         $storeComic = Comic::create($comic);
         $storeComic->categories()->attach(explode(',', $comic['category_id']));
-        return $this->postSuccess($storeComic);
+        return response()->json([
+            'code' => 201,
+            'message' => 'Thêm mới thành công!'
+        ], 201);
     }
 
     public function show($slug)
     {
-        return $this->getData(Comic::with('categories:name', 'chapters')->where('slug', $slug)->first());
+        return response()->json(Comic::with('categories:name', 'chapters')->where('slug', $slug)->first());
     }
 
     public function update(UpdateComicRequest $request, $slug)
@@ -57,12 +66,12 @@ class ComicController extends BaseController
             $imageKit->rename([
                 "filePath" => $slug . "_bg",
                 "newFileName" => $comic['slug'] . "_bg",
-                "purgeCache" => false
+                "purgeCache" => true
             ]);
             $imageKit->rename([
                 "filePath" => $slug . "_img",
                 "newFileName" => $comic['slug'] . "_img",
-                "purgeCache" => false
+                "purgeCache" => true
             ]);
         }
         $uploadBgPreview = $imageKit->uploadFile([
@@ -75,25 +84,34 @@ class ComicController extends BaseController
             'fileName' => $comic['slug'] . "_img",
             'useUniqueFileName' => false
         ]);
+        $imageKit->purgeCache($uploadBgPreview->result->url);
+        $imageKit->purgeCache($uploadImgPreview->result->url);
 
         $comic['background_preview'] = $uploadBgPreview->result->name;
         $comic['image_preview'] = $uploadImgPreview->result->name;
 
-        Comic::where('slug', $slug)->update($comic);
-        Comic::find($slug)->categories()->sync(explode(',', $comic['category_id']));
-        return $this->postSuccess($comic, 'Chỉnh sửa thành công!');
+        $oldRecord = Comic::find($slug);
+        $oldRecord->update($comic);
+        $oldRecord->categories()->sync(explode(',', $comic['category_id']));
+        return response()->json([
+            'code' => 201,
+            'message' => 'Chỉnh sửa thành công!'
+        ], 201);
     }
 
     public function delete($slug)
     {
         Comic::where('slug', $slug)->delete();
-        return $this->postSuccess(false, 'Xoá thành công!');
+        return response()->json([
+            'code' => 201,
+            'message' => 'Đã chuyển vào thùng rác!'
+        ], 201);
     }
 
     public function destroy($slug)
     {
-        $comic = Comic::where('slug', $slug);
-        if ($comic->exists())
+        $comic = Comic::find($slug);
+        if ($comic)
         {
             $imageKit = new ImageKit(config("imagekit.public_key"), config("imagekit.private_key"), config("imagekit.url_endpoint"));
             $searchBg = $imageKit->listFiles([
@@ -103,8 +121,12 @@ class ComicController extends BaseController
                 'searchQuery' => $slug . "_img"
             ]);
             $imageKit->bulkDeleteFiles([$searchBg->result->fileId, $searchImg->result->fileId]);
+            $comic->categories()->detach();
             $comic->forceDelete();
-            return $this->postSuccess(false, 'Xoá thành công!');
+            return response()->json([
+                'code' => 204,
+                'message' => 'Xoá thành công!'
+            ], 204);
         }
     }
 }
